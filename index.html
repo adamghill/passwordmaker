@@ -1,0 +1,241 @@
+<!doctype html>
+<html>
+<!--
+  PasswordMaker - Creates and manages passwords
+  Copyright (C) 2005 Eric H. Jung and LeahScape, Inc.
+  http://passwordmaker.org/
+  grimholtz@yahoo.com
+
+  This library is free software; you can redistribute it and/or modify it
+  under the terms of the GNU Lesser General Public License as published by
+  the Free Software Foundation; either version 2.1 of the License, or (at
+  your option) any later version.
+
+  This library is distributed in the hope that it will be useful, but WITHOUT
+  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  FITNESSFOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
+  for more details.
+
+  You should have received a copy of the GNU Lesser General Public License
+  along with this library; if not, write to the Free Software Foundation,
+  Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA 
+-->
+<head>
+  <title>Responsive PasswordMaker</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1"/>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- <link rel="stylesheet" href="pure-min.css"> -->
+  <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+  <!--[if lte IE 8]>
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-old-ie-min.css">
+  <![endif]-->
+  <!--[if gt IE 8]><!-->
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/grids-responsive-min.css">
+  <!--<![endif]-->
+  <link rel="stylesheet" href="index.css">
+
+  <script src="index.js"></script>
+
+  <body>
+    <div class="pure-menu pure-menu-horizontal" style="text-align: right;">
+      <ul class="pure-menu-list">
+          <li class="pure-menu-item"><a href="http://passwordmaker.org/" class="pure-menu-link">passwordmaker.org</a></li>
+          <li class="pure-menu-item"><a href="http://passwordmaker.org/How_it_works" class="pure-menu-link">How it works</a></li>
+          <li class="pure-menu-item"><a href="http://passwordmaker.org/passwordmaker.html" class="pure-menu-link">Original online version</a></li>
+      </ul>
+    </div>
+    
+    <div class="pure-g">
+      <div class="pure-u-1-3">
+      </div>
+      <div class="pure-u-2-3">
+        <aside>
+          You provide PasswordMaker two pieces of information: a "master password" -- that one, single password you like -- and the URL of the website requiring a password. Through the magic of one-way hash algorithms, PasswordMaker calculates a digital fingerprint, which can be used as your password for the website.
+        </aside>
+      </div>
+    </div>
+    
+    <form class="pure-form pure-form-aligned">
+      <fieldset>
+        <div class="section">
+          <div class="pure-control-group">
+            <label for="profileLB">Profile</label>
+            <select id="profileLB" name="profile" class="editable" onchange="loadProfile();">
+              <option value="!!!edit!!!" class="activateEdit">New Profile</option>
+            </select>
+            <script type="text/javascript">
+              /*
+              profileLB = new Bs_Dropdown();
+                profileLB.imgDir = 'scripts/blueShoes/components/dropdown/img/win2k/';
+              profileLB.setValue('Default');
+              profileLB.drawInto('profileLB');
+              profileLB.attachEvent('onChange', loadProfile);
+              */
+
+              if(getCookie("profileList")!=null) {
+                // load the various profiles
+                var a = unescape(getCookie("profileList"));
+                var profileListArray = a.split("|");
+
+                for (var i=0; i<profileListArray.length; i++) {
+                  var option = document.createElement("option");
+                  option.text = unescape(profileListArray[i]);
+                  EditableSelect.selectAddOption(document.getElementById("profileLB"), option);
+
+                  if(i==0)
+                    option.selected="selected";
+                }
+              }
+              else {
+                profileListArray = new Array("Default");
+
+                var option = document.createElement("option");
+                option.text = "Default";
+                EditableSelect.selectAddOption(document.getElementById("profileLB"), option);
+                option.selected="selected";
+              }
+            </script>
+          </div>
+
+          <div class="pure-control-group">
+            <label for="passwdMaster">Master Password</label>
+            <input type="password" id="passwdMaster" onchange="preGeneratePassword();" onkeyup="preGeneratePassword();" onkeydown="preGeneratePassword();" onkeypress="preGeneratePassword();" oninput="preGeneratePassword();" type="password" />
+            <input type="button" value="Save master password" id="saveMasterBtn" onclick="saveMaster();" class="pure-button button-xsmall" required />
+          </div>
+
+          <div class="pure-control-group">
+            <label for="hashAlgorithmLB">Hash Algorithm</label>
+            <select id="hashAlgorithmLB" onchange="preGeneratePassword();" onkeyup="preGeneratePassword();" onkeydown="preGeneratePassword();" onkeypress="preGeneratePassword();" oninput="preGeneratePassword();">
+              <option value="md4">MD4</option>
+              <option value="hmac-md4">HMAC-MD4</option>
+              <option value="md5">MD5</option>
+              <option value="md5_v6">MD5 Version 0.6</option>
+              <option value="hmac-md5">HMAC-MD5</option>
+              <option value="hmac-md5_v6">HMAC-MD5 Version 0.6</option>
+              <option value="sha1">SHA-1</option>
+              <option value="hmac-sha1">HMAC-SHA-1</option>
+              <option value="sha256">SHA-256</option>
+              <option value="hmac-sha256_fix">HMAC-SHA-256</option>
+              <option value="hmac-sha256">HMAC-SHA-256 Version 1.5.1</option>
+              <option value="rmd160">RIPEMD-160</option>
+              <option value="hmac-rmd160">HMAC-RIPEMD-160</option>
+            </select>
+          </div>
+
+        <div class="section">
+          <div class="pure-control-group">
+            <label for="preURL">Input URL</label>
+            <input id="preURL" onchange="populateURL();" onkeyup="populateURL();" onkeydown="populateURL();" onkeypress="populateURL();" oninput="populateURL();" type="url" placeholder="http://www.google.com" class="pure-input-1-3" required />
+          </div>
+
+          <div class="pure-control-group">
+              <label for="passwdUrl">URL Components</label>
+              <label for="protocolCB" class="pure-checkbox" style="text-align: left;">
+                <input type="checkbox" id="protocolCB" onclick="populateURL();" />
+                Protocol
+              </label>
+              <label for="subdomainCB" class="pure-checkbox" style="text-align: left;">
+                <input type="checkbox" id="subdomainCB" onclick="populateURL();" />
+                Subdomain(s)
+              </label>
+              <label for="domainCB" class="pure-checkbox" style="text-align: left;">
+                <input type="checkbox" id="domainCB" onclick="populateURL();" status="checked" />
+                Domain
+              </label>
+              <label for="pathCB" class="pure-checkbox" style="text-align: left;">
+                <input type="checkbox" id="pathCB" onclick="populateURL();" />
+                Port, path, anchor, query parameters
+              </label>
+          </div>
+
+          <div class="pure-control-group">
+            <label for="passwdUrl">URL to use</label>
+            <input type="url" id="passwdUrl" onchange="preGeneratePassword();" onkeyup="preGeneratePassword();" onkeydown="preGeneratePassword();" onkeypress="preGeneratePassword();" oninput="preGeneratePassword();" class="pure-input-1-3" readonly />
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="pure-control-group">
+            <label for="passwdLength">Length of Generated Password</label>
+            <input id="passwdLength" maxlength="3" size="3" value="12" type="number" onchange="if (/\D/.test(this.value)) this.value='8'; preGeneratePassword();" onkeyup="if (/\D/.test(this.value)) this.value='8'; preGeneratePassword();" onkeydown="if (/\D/.test(this.value)) this.value='8'; preGeneratePassword();" onkeypress="if (/\D/.test(this.value)) this.value='8';preGeneratePassword();" oninput="if (/\D/.test(this.value)) this.value='8'; preGeneratePassword(); "/>
+          </div>
+
+          <div class="pure-control-group">
+            <label for="usernameTB">Username</label>
+            <input id="usernameTB" onchange="preGeneratePassword();" onkeyup="preGeneratePassword();" onkeydown="preGeneratePassword();" onkeypress="preGeneratePassword();" oninput="preGeneratePassword(); "/>
+
+            <label for="counter">Modifier</label>
+            <input id="counter" onchange="preGeneratePassword();" onkeyup="preGeneratePassword();" onkeydown="preGeneratePassword();" onkeypress="preGeneratePassword();" oninput="preGeneratePassword(); "/>
+          </div>
+
+          <div class="pure-control-group">
+            <label for="passwordPrefix">Password Prefix</label>
+            <input id="passwordPrefix" onchange="preGeneratePassword();" onkeyup="preGeneratePassword();" onkeydown="preGeneratePassword();" onkeypress="preGeneratePassword();" oninput="preGeneratePassword();" />
+
+            <label for="passwordSuffix">Password Suffix</label>
+            <input id="passwordSuffix" onchange="preGeneratePassword();" onkeyup="preGeneratePassword();" onkeydown="preGeneratePassword();" onkeypress="preGeneratePassword();" oninput="preGeneratePassword();" />
+          </div>
+
+          <div class="pure-control-group">
+            <label for="whereLeetLB">Use l33t</label>
+            <select id="whereLeetLB" onchange="onWhereLeetLBChanged(); preGeneratePassword();">
+              <option value="off">not at all</option>
+              <option value="before-hashing">before generating password</option>
+              <option value="after-hashing">after generating password</option>
+              <option value="both">before and after generating password</option>
+            </select>
+
+            <label for="leetLevelLB">l33t Level</label>
+            <select id="leetLevelLB" onchange="preGeneratePassword();">
+              <option value="0">1</option>
+              <option value="1">2</option>
+              <option value="2">3</option>
+              <option value="3">4</option>
+              <option value="4">5</option>
+              <option value="5">6</option>
+              <option value="6">7</option>
+              <option value="7">8</option>
+              <option value="8">9</option>
+            </select>
+          </div>
+
+          <div class="pure-control-group">
+            <label for="charset">Characters</label>
+            <select id="charset" name="charset" onchange="preGeneratePassword();">
+              <option value="!!!edit!!!" class="activateEdit">Edit Character Set</option>
+              <option selected="selected">ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789`~!@#$%^&*()_-+={}|[]\:&quot;;'<>?,./</option>
+              <option>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789</option>
+              <option>0123456789abcdef</option>
+              <option>0123456789</option>
+              <option>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz</option>
+              <option>`~!@#$%^&*()_-+={}|[]\:&quot;;'<>?,./</option>
+            </select>
+            <br/>
+            <span id="charMinWarning" style="display: none;">Two character minimum required</span>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="pure-control-group">
+            <label for="passwdGenerated">Generated Password</label>
+            <input id="passwdGenerated" style="color: #00f; background-color: #fff; font-weight: bold;" />
+            
+            <div class="pure-controls">
+              <input type="checkbox" id="ifHidePasswd" onchange="if (ifHidePasswd.checked==true) { passwdGenerated.style.color='#fff'; } else { passwdGenerated.style.color='#00f'; } saveGlobalPrefs();" /> Make password invisible (Highlight to view)
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="pure-controls">
+            <input type="button" value="Save Profile" onclick="saveProfile();" class="pure-button pure-button-primary" />
+            <input type="button" value="Cancel Changes" onclick="loadProfile();" class="pure-button" />
+            <input type="button" value="Delete Profile" onclick="deleteProfile();" class="pure-button" />
+          </div>
+        </div>
+      </fieldset>
+  </form>
+</body>
+</html>
